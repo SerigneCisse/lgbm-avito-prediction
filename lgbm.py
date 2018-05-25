@@ -44,7 +44,12 @@ lbl = preprocessing.LabelEncoder()
 for col in categorical:
     df[col] = lbl.fit_transform(df[col].astype(str))
 
-textfeats = ["description", "title"]
+df['text_feat'] = df.apply(lambda row: ' '.join([
+    str(row['param_1']),
+    str(row['param_2']),
+    str(row['param_3'])]),axis=1)
+
+textfeats = ["description","text_feat" , "title"]
 
 for cols in textfeats:
     df[cols] = df[cols].astype(str)
@@ -56,7 +61,6 @@ for cols in textfeats:
     df[cols + '_words_vs_unique'] = df[cols+'_num_unique_words'] / df[cols+'_num_words'] * 100 # Count Unique Words
 
 russian_stop = set(stopwords.words('russian'))
-df.drop(["param_1","param_2","param_3"],axis=1,inplace=True)
 
 tfidf_para = {
     "stop_words": russian_stop,
@@ -82,7 +86,6 @@ vectorizer = FeatureUnion([
             #max_features=7000,
             preprocessor=get_col('title')))
     ])
-df.drop(["description", "title"], axis=1,inplace=True)
 
 vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
@@ -140,7 +143,7 @@ ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 df['ridge_preds'] = ridge_preds
 
 ## start to create train data
-
+df.drop(["param_1","param_2","param_3", "description", "title", "text_feat"], axis=1,inplace=True)
 X = hstack([csr_matrix(df.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
 tfvocab = df.columns.tolist() + tfvocab
