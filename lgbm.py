@@ -86,7 +86,7 @@ tfvocab = vectorizer.get_feature_names()
 
 kf = KFold(n_splits=4, shuffle=True, random_state=42)
 
-def get_oof(clf):
+def get_oof(clf, x_train, y, x_test):
     oof_train = np.zeros((ntrain,))
     oof_test = np.zeros((ntest,))
     oof_test_skf = np.empty((4, ntest))
