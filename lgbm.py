@@ -91,7 +91,7 @@ def get_oof(clf, x_train, y, x_test):
     oof_test = np.zeros((ntest,))
     oof_test_skf = np.empty((4, ntest))
 
-    for i, (train_index, test_index) in enumerate(kf.split(ntrain)):
+    for i, (train_index, test_index) in enumerate(kf.split(x_train)):
         x_tr = x_train[train_index]
         y_tr = y_train[train_index]
         x_te = x_train[test_index]
