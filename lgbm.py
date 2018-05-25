@@ -116,6 +116,17 @@ class SklearnWrapper(object):
     def predict(self, x):
         return self.clf.predict(x)
 
+ridge_params = {
+    'alpha': 20.0,
+    'fit_intercept':True,
+    'normalize':False,
+    'copy_X':True,
+    'max_iter':None,
+    'tol':0.001,
+    'solver':'auto',
+    'random_state': 42
+}
+
 ridge = SklearnWrapper(clf=Ridge, seed = 42, params = ridge_params)
 ridge_oof_train, ridge_oof_test = get_oof(ridge, ready_df[:ntrain], y, ready_df[ntrain:])
 rms = sqrt(mean_squared_error(y, ridge_oof_train))
