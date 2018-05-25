@@ -93,7 +93,7 @@ def get_oof(clf, x_train, y, x_test):
 
     for i, (train_index, test_index) in enumerate(kf.split(x_train)):
         x_tr = x_train[train_index]
-        y_tr = y_train[train_index]
+        y_tr = y[train_index]
         x_te = x_train[test_index]
 
         clf.train(x_tr, y_tr)
