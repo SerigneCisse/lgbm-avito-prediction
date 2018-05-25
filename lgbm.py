@@ -82,8 +82,7 @@ vectorizer = FeatureUnion([
             #max_features=7000,
             preprocessor=get_col('title')))
     ])
-textfeats = ["description","text_feat", "title"]
-df.drop(textfeats, axis=1,inplace=True)
+df.drop(["description", "title"], axis=1,inplace=True)
 
 vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
