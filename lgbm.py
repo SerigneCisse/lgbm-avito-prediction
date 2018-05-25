@@ -2,6 +2,7 @@ from sklearn import metrics, preprocessing, feature_selection
 from sklearn.metrics import mean_squared_error
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.pipeline import FeatureUnion
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import KFold
 
 
