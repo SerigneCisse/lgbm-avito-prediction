@@ -11,6 +11,7 @@ from nltk.corpus import stopwords
 
 import numpy as np
 import pandas as pd
+import math
 import os
 import gc
 
@@ -129,7 +130,7 @@ ridge_params = {
 
 ridge = SklearnWrapper(clf=Ridge, seed = 42, params = ridge_params)
 ridge_oof_train, ridge_oof_test = get_oof(ridge, fitted_df[:ntrain], y, fitted_df[ntrain:])
-rms = sqrt(mean_squared_error(y, ridge_oof_train))
+rms = math.sqrt(mean_squared_error(y, ridge_oof_train))
 print('Ridge OOF RMSE: {}'.format(rms))
 ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 
