@@ -1,9 +1,9 @@
-
 from sklearn import metrics, preprocessing, feature_selection
 from sklearn.metrics import mean_squared_error
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.pipeline import FeatureUnion
 from sklearn.model_selection import KFold
+
 
 from scipy.sparse import hstack, csr_matrix
 from nltk.corpus import stopwords
@@ -83,14 +83,14 @@ vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
 tfvocab = vectorizer.get_feature_names()
 
-kf = KFold(ntrain, n_folds=4, shuffle=True, random_state=42)
+kf = KFold(n_splits=4, shuffle=True, random_state=42)
 
 def get_oof(clf):
     oof_train = np.zeros((ntrain,))
     oof_test = np.zeros((ntest,))
     oof_test_skf = np.empty((4, ntest))
 
-    for i, (train_index, test_index) in enumerate(kf):
+    for i, (train_index, test_index) in enumerate(kf.split(ntrain)):
         x_tr = x_train[train_index]
         y_tr = y_train[train_index]
         x_te = x_train[test_index]
