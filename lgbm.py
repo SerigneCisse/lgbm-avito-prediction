@@ -9,6 +9,7 @@ from sklearn.model_selection import KFold, train_test_split
 from scipy.sparse import hstack, csr_matrix
 from nltk.corpus import stopwords
 
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
 import math
