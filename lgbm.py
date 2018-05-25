@@ -56,6 +56,7 @@ for cols in textfeats:
     df[cols + '_words_vs_unique'] = df[cols+'_num_unique_words'] / df[cols+'_num_words'] * 100 # Count Unique Words
 
 russian_stop = set(stopwords.words('russian'))
+df.drop(["param_1","param_2","param_3"],axis=1,inplace=True)
 
 tfidf_para = {
     "stop_words": russian_stop,
@@ -81,6 +82,9 @@ vectorizer = FeatureUnion([
             #max_features=7000,
             preprocessor=get_col('title')))
     ])
+textfeats = ["description","text_feat", "title"]
+df.drop(textfeats, axis=1,inplace=True)
+
 vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
 tfvocab = vectorizer.get_feature_names()
