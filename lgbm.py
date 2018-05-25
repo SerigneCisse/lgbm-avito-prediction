@@ -178,7 +178,6 @@ lgvalid = lgb.Dataset(X_valid, y_valid,
                 feature_name=tfvocab,
                 categorical_feature = categorical)
 
-modelstart = time.time()
 lgb_clf = lgb.train(
     lgbm_params,
     lgtrain,
@@ -194,5 +193,3 @@ lgpred = lgb_clf.predict(testing)
 lgsub = pd.DataFrame(lgpred,columns=["deal_probability"],index=testdex)
 lgsub['deal_probability'].clip(0.0, 1.0, inplace=True) # Between 0 and 1
 lgsub.to_csv("lgsub.csv",index=True,header=True)
-print("Model Runtime: %0.2f Minutes"%((time.time() - modelstart)/60))
-print("Notebook Runtime: %0.2f Minutes"%((time.time() - notebookstart)/60))
