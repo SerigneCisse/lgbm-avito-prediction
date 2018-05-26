@@ -44,15 +44,14 @@ def classify_inception(image_path):
     return inception_v3.decode_predictions(preds, top=1)[0][0]
 
 def image_id_from_path(path):
-    print(path.split('/')[3].split('.')[0])
     return path.split('/')[3].split('.')[0]
 
 inception_conf = [[image_id_from_path(x), classify_inception(x)[2]] for x in image_files]
 confidence = pd.DataFrame(inception_conf, columns=['image', 'image_confidence'])
 print(confidence)
 print(testing)
-training_confidence = training.merge(confidence, on='image')
-testing_confidence = testing.merge(confidence, on='image')
+training_confidence = pd.merge(training, confidence, how='left', on='image')
+testing_confidence = pd.merge(testing, confidence, how='left', on='image')
 
 print(training_confidence)
 print(testing_confidence)
