@@ -165,7 +165,7 @@ df['ridge_preds'] = ridge_preds
 df_confidence = pd.merge(df, confidence, how='left', on='image')
 
 ## start to create train data
-df_confidence.drop(["param_1","param_2","param_3", "description", "title", "text_feat", "image"], axis=1,inplace=True)
+df_confidence.drop(["param_1","param_2","param_3", "description", "title", "image"], axis=1,inplace=True)
 print(df_confidence)
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
