@@ -36,7 +36,10 @@ image_files = [x.path for x in os.scandir('./data/images/')]
 inception_model = inception_v3.InceptionV3(weights='imagenet')
 
 def classify_inception(image_path):
-    img = image.load_img(image_path, target_size=(224, 224))
+    try:
+        img = image.load_img(image_path, target_size=(224, 224))
+    except OSError, IOError:
+        return [0,0,0.5]
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = inception_v3.preprocess_input(x)
