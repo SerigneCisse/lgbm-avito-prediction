@@ -101,9 +101,9 @@ vectorizer = FeatureUnion([
            #max_features=16000,
             **tfidf_para,
             preprocessor=get_col('description'))),
-        ('title',TfidfVectorizer(
+        ('title',CountVectorizer(
             ngram_range=(1, 2),
-            **tfidf_para,
+            stop_words = russian_stop,
             #max_features=7000,
             preprocessor=get_col('title')))
     ])
@@ -168,11 +168,11 @@ print(df_confidence)
 df_confidence.drop(["param_1","param_2","param_3", "description", "title", "image"], axis=1,inplace=True)
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df_confidence.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
-tfvocab = df.columns.tolist() + tfvocab
+tfvocab = df_confidence.columns.tolist() + tfvocab
 for shape in [X,testing]:
     print("{} Rows and {} Cols".format(*shape.shape))
 print("Feature Names Length: ",len(tfvocab))
-del df, confidence
+del df, confidence, df_confidence
 gc.collect()
 
 X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.10, random_state=23)
