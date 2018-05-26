@@ -112,7 +112,7 @@ vectorizer = FeatureUnion([
 vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
 tfvocab = vectorizer.get_feature_names()
-df_confidence.drop(["description", "title"], axis=1,inplace=True)
+df.drop(["description", "title"], axis=1,inplace=True)
 
 kf = KFold(n_splits=4, shuffle=True, random_state=42)
 
