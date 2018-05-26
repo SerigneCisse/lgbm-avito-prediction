@@ -63,7 +63,7 @@ df["image_top_1"].fillna(-999,inplace=True)
 training_index = df.loc[df.activation_date<=pd.to_datetime('2017-04-07')].index
 validation_index = df.loc[df.activation_date>=pd.to_datetime('2017-04-08')].index
 
-df.drop(['activation_date', 'image'], axis=1, inplace=True)
+df.drop('activation_date', axis=1, inplace=True)
 
 categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3"]
 lbl = preprocessing.LabelEncoder()
@@ -165,7 +165,7 @@ df['ridge_preds'] = ridge_preds
 df_confidence = pd.merge(df, confidence, how='left', on='image')
 
 ## start to create train data
-df_confidence.drop(["param_1","param_2","param_3", "description", "title", "text_feat"], axis=1,inplace=True)
+df_confidence.drop(["param_1","param_2","param_3", "description", "title", "text_feat", "image"], axis=1,inplace=True)
 print(df_confidence)
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
