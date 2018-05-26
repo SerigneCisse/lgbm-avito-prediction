@@ -48,15 +48,9 @@ def image_id_from_path(path):
 
 inception_conf = [[image_id_from_path(x), classify_inception(x)[2]] for x in image_files]
 confidence = pd.DataFrame(inception_conf, columns=['image', 'image_confidence'])
-print(confidence)
-print(testing)
-training_confidence = pd.merge(training, confidence, how='left', on='image')
-testing_confidence = pd.merge(testing, confidence, how='left', on='image')
+confidence.to_csv('./save_encoded_img.csv')
 
-print(training_confidence)
-print(testing_confidence)
-
-df = pd.concat([training_confidence, testing_confidence], axis=0)
+df = pd.concat([training, testing], axis=0)
 del training, testing
 gc.collect()
 df['price'] = np.log(df['price']+0.0001)
@@ -65,7 +59,6 @@ df['weekday'] = df['activation_date'].dt.weekday
 df['weekn of year'] = df['activation_date'].dt.week
 df['dayn of month'] = df['activation_date'].dt.day
 df["image_top_1"].fillna(-999,inplace=True)
-df['image_confidence'].fillna(0,inplace=True)
 
 training_index = df.loc[df.activation_date<=pd.to_datetime('2017-04-07')].index
 validation_index = df.loc[df.activation_date>=pd.to_datetime('2017-04-08')].index
@@ -114,9 +107,6 @@ vectorizer = FeatureUnion([
             #max_features=7000,
             preprocessor=get_col('title')))
     ])
-
-print(df)
-print(df.loc[traindex,:])
 
 vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
@@ -172,16 +162,18 @@ print('Ridge OOF RMSE: {}'.format(rms))
 ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 
 df['ridge_preds'] = ridge_preds
+df_confidence = pd.merge(df, confidence, how='left', on='image')
 
 ## start to create train data
-df.drop(["param_1","param_2","param_3", "description", "title", "text_feat"], axis=1,inplace=True)
-X = hstack([csr_matrix(df.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
+df_confidence.drop(["param_1","param_2","param_3", "description", "title", "text_feat"], axis=1,inplace=True)
+print(df_confidence)
+X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
 tfvocab = df.columns.tolist() + tfvocab
 for shape in [X,testing]:
     print("{} Rows and {} Cols".format(*shape.shape))
 print("Feature Names Length: ",len(tfvocab))
-del df
+del df, confidence
 gc.collect()
 
 X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.10, random_state=23)
