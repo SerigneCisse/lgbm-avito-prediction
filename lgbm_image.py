@@ -68,6 +68,7 @@ df.drop('activation_date', axis=1, inplace=True)
 categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3"]
 lbl = preprocessing.LabelEncoder()
 for col in categorical:
+    df[col].fillna('missing')
     df[col] = lbl.fit_transform(df[col].astype(str))
 
 textfeats = ["description", "title"]
@@ -111,6 +112,7 @@ vectorizer = FeatureUnion([
 vectorizer.fit(df.loc[traindex,:].to_dict('records'))
 fitted_df = vectorizer.transform(df.to_dict('records'))
 tfvocab = vectorizer.get_feature_names()
+df_confidence.drop(["description", "title"], axis=1,inplace=True)
 
 kf = KFold(n_splits=4, shuffle=True, random_state=42)
 
@@ -165,7 +167,7 @@ df['ridge_preds'] = ridge_preds
 df_confidence = pd.merge(df.reset_index(), confidence, how='left', on='image').set_index('item_id')
 print(df_confidence)
 ## start to create train data
-df_confidence.drop(["param_1","param_2","param_3", "description", "title", "image"], axis=1,inplace=True)
+df_confidence.drop("image", axis=1,inplace=True)
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df_confidence.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
 tfvocab = df_confidence.columns.tolist() + tfvocab
