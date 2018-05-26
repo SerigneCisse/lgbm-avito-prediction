@@ -162,13 +162,14 @@ print('Ridge OOF RMSE: {}'.format(rms))
 ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 
 df['ridge_preds'] = ridge_preds
-df_confidence = pd.merge(df, confidence, how='left', on='image')
-
+df_confidence = pd.merge(df, confidence, how='left')
 ## start to create train data
 df_confidence.drop(["param_1","param_2","param_3", "description", "title", "image"], axis=1,inplace=True)
+df_confidence.set_index('item_id')
 print(df_confidence)
+print(df_confidence.loc[traindex,:])
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
-testing = hstack([csr_matrix(df.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
+testing = hstack([csr_matrix(df_confidence.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
 tfvocab = df.columns.tolist() + tfvocab
 for shape in [X,testing]:
     print("{} Rows and {} Cols".format(*shape.shape))
