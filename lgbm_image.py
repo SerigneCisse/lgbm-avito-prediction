@@ -13,12 +13,23 @@ from sklearn.model_selection import KFold, train_test_split
 from scipy.sparse import hstack, csr_matrix
 from nltk.corpus import stopwords
 
+
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
 import math
 import os
 import gc
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--valid',  dest='VALID', action='store_true')
+parser.add_argument('--no-valid',  dest='VALID', action='store_false')
+parser.set_defaults(VALID=False)
+args = parser.parse_args()
+
+print('valid is ', args.VALID)
 
 training = pd.read_csv('./data/train.csv', index_col = 'item_id', parse_dates = ['activation_date'])
 traindex = training.index
@@ -168,7 +179,6 @@ ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 
 df['ridge_preds'] = ridge_preds
 df_confidence = pd.merge(df.reset_index(), confidence, how='left', on='image').set_index('item_id')
-print(df_confidence)
 ## start to create train data
 df_confidence.drop("image", axis=1,inplace=True)
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
@@ -187,32 +197,57 @@ lgbm_params =  {
     'boosting_type': 'gbdt',
     'objective': 'regression',
     'metric': 'rmse',
-    'max_depth': 15,
-    'num_leaves': 37,
-    'feature_fraction': 0.7,
-    'bagging_fraction': 0.8,
+    # 'max_depth': 15,
+    'num_leaves': 250,
+    'feature_fraction': 0.65,
+    'bagging_fraction': 0.85,
     # 'bagging_freq': 5,
-    'learning_rate': 0.019,
+    'learning_rate': 0.02,
     'verbose': 0
 }
 
-# LGBM Dataset Formatting
-lgtrain = lgb.Dataset(X_train, y_train,
-                feature_name=tfvocab,
-                categorical_feature = categorical)
-lgvalid = lgb.Dataset(X_valid, y_valid,
-                feature_name=tfvocab,
-                categorical_feature = categorical)
+if args.VALID == True:
+    X_train, X_valid, y_train, y_valid = train_test_split(
+        X, y, test_size=0.10, random_state=23)
 
-lgb_clf = lgb.train(
-    lgbm_params,
-    lgtrain,
-    num_boost_round=16000,
-    valid_sets=[lgtrain, lgvalid],
-    valid_names=['train','valid'],
-    early_stopping_rounds=200,
-    verbose_eval=200
-)
+    # LGBM Dataset Formatting
+    lgtrain = lgb.Dataset(X_train, y_train,
+                    feature_name=tfvocab,
+                    categorical_feature = categorical)
+    lgvalid = lgb.Dataset(X_valid, y_valid,
+                    feature_name=tfvocab,
+                    categorical_feature = categorical)
+    del X, X_train
+    gc.collect()
+
+    # Go Go Go
+    lgb_clf = lgb.train(
+        lgbm_params,
+        lgtrain,
+        num_boost_round=n_rounds,
+        valid_sets=[lgtrain, lgvalid],
+        valid_names=['train','valid'],
+        early_stopping_rounds=50,
+        verbose_eval=100
+    )
+    print("Model Evaluation Stage")
+    print('RMSE:', np.sqrt(metrics.mean_squared_error(y_valid, lgb_clf.predict(X_valid))))
+    del X_valid ; gc.collect()
+
+else:
+    # LGBM Dataset Formatting
+    lgtrain = lgb.Dataset(X, y,
+                    feature_name=tfvocab,
+                    categorical_feature = categorical)
+    del X
+    gc.collect()
+    # Go Go Go
+    lgb_clf = lgb.train(
+        lgbm_params,
+        lgtrain,
+        num_boost_round=1000,
+        verbose_eval=100
+    )
 
 print('RMSE:', np.sqrt(metrics.mean_squared_error(y_valid, lgb_clf.predict(X_valid))))
 lgpred = lgb_clf.predict(testing)
