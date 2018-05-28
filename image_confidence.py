@@ -2,6 +2,10 @@ from keras.preprocessing import image
 from PIL import Image
 import keras.applications.inception_v3 as inception_v3
 import pandas as pd
+import numpy as np
+import os
+
+print('confidence encodeing start...')
 
 image_files = [x.path for x in os.scandir('./data/images/')]
 inception_model = inception_v3.InceptionV3(weights='imagenet')
