@@ -43,9 +43,6 @@ print("Test shape: {} Rows, {} Columns".format(*testing.shape))
 ntrain = training.shape[0]
 ntest = testing.shape[0]
 
-confidence = pd.read_csv('encoded_image.csv')
-print('load image_confidence')
-
 df = pd.concat([training, testing], axis=0)
 del training, testing
 gc.collect()
@@ -61,22 +58,30 @@ validation_index = df.loc[df.activation_date>=pd.to_datetime('2017-04-08')].inde
 
 df.drop('activation_date', axis=1, inplace=True)
 
+confidence = pd.read_csv('encoded_image.csv')
+print('load image_confidence：')
+df_confidence = pd.merge(df.reset_index(), confidence, how='left', on='image').set_index('item_id')
+df_confidence.drop("image", axis=1,inplace=True)
+print(df_confidence[:5])
+del df, confidence
+gc.collect()
+
 categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3","confidence"]
 lbl = preprocessing.LabelEncoder()
 for col in categorical:
-    df[col].fillna('missing')
-    df[col] = lbl.fit_transform(df[col].astype(str))
+    df_confidence[col].fillna('missing')
+    df_confidence[col] = lbl.fit_transform(df_confidence[col].astype(str))
 
 textfeats = ["description", "title"]
 
 for cols in textfeats:
-    df[cols] = df[cols].astype(str)
-    df[cols] = df[cols].astype(str).fillna('missing') # FILL NA
-    df[cols] = df[cols].str.lower() # Lowercase all text, so that capitalized words dont get treated differently
-    df[cols + '_num_chars'] = df[cols].apply(len) # Count number of Characters
-    df[cols + '_num_words'] = df[cols].apply(lambda comment: len(comment.split())) # Count number of Words
-    df[cols + '_num_unique_words'] = df[cols].apply(lambda comment: len(set(w for w in comment.split())))
-    df[cols + '_words_vs_unique'] = df[cols+'_num_unique_words'] / df[cols+'_num_words'] * 100 # Count Unique Words
+    df_confidence[cols] = df_confidence[cols].astype(str)
+    df_confidence[cols] = df_confidence[cols].astype(str).fillna('missing') # FILL NA
+    df_confidence[cols] = df_confidence[cols].str.lower() # Lowercase all text, so that capitalized words dont get treated differently
+    df_confidence[cols + '_num_chars'] = df_confidence[cols].apply(len) # Count number of Characters
+    df_confidence[cols + '_num_words'] = df_confidence[cols].apply(lambda comment: len(comment.split())) # Count number of Words
+    df_confidence[cols + '_num_unique_words'] = df_confidence[cols].apply(lambda comment: len(set(w for w in comment.split())))
+    df_confidence[cols + '_words_vs_unique'] = df_confidence[cols+'_num_unique_words'] / df_confidence[cols+'_num_words'] * 100 # Count Unique Words
 
 russian_stop = set(stopwords.words('russian'))
 
@@ -105,10 +110,10 @@ vectorizer = FeatureUnion([
             preprocessor=get_col('title')))
     ])
 
-vectorizer.fit(df.loc[traindex,:].to_dict('records'))
-fitted_df = vectorizer.transform(df.to_dict('records'))
+vectorizer.fit(df_confidence.loc[traindex,:].to_dict('records'))
+fitted_df = vectorizer.transform(df_confidence.to_dict('records'))
 tfvocab = vectorizer.get_feature_names()
-df.drop(["description", "title"], axis=1,inplace=True)
+df_confidence.drop(["description", "title"], axis=1,inplace=True)
 
 kf = KFold(n_splits=4, shuffle=True, random_state=42)
 
@@ -159,18 +164,14 @@ rms = math.sqrt(mean_squared_error(y, ridge_oof_train))
 print('Ridge OOF RMSE: {}'.format(rms))
 ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 
-df['ridge_preds'] = ridge_preds
-df_confidence = pd.merge(df.reset_index(), confidence, how='left', on='image').set_index('item_id')
-## start to create train data
-print(df_confidence)
-df_confidence.drop("image", axis=1,inplace=True)
+df_confidence['ridge_preds'] = ridge_preds
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df_confidence.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
 tfvocab = df_confidence.columns.tolist() + tfvocab
 for shape in [X,testing]:
     print("{} Rows and {} Cols".format(*shape.shape))
 print("Feature Names Length: ",len(tfvocab))
-del df, confidence, df_confidence
+del df_confidence
 gc.collect()
 
 X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.10, random_state=23)
