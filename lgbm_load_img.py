@@ -61,7 +61,7 @@ validation_index = df.loc[df.activation_date>=pd.to_datetime('2017-04-08')].inde
 
 df.drop('activation_date', axis=1, inplace=True)
 
-categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3"]
+categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3","confidence"]
 lbl = preprocessing.LabelEncoder()
 for col in categorical:
     df[col].fillna('missing')
@@ -162,6 +162,7 @@ ridge_preds = np.concatenate([ridge_oof_train, ridge_oof_test])
 df['ridge_preds'] = ridge_preds
 df_confidence = pd.merge(df.reset_index(), confidence, how='left', on='image').set_index('item_id')
 ## start to create train data
+print(df_confidence)
 df_confidence.drop("image", axis=1,inplace=True)
 X = hstack([csr_matrix(df_confidence.loc[traindex,:].values),fitted_df[0:traindex.shape[0]]]) # Sparse Matrix
 testing = hstack([csr_matrix(df_confidence.loc[testdex,:].values),fitted_df[traindex.shape[0]:]])
