@@ -66,7 +66,7 @@ print(df_confidence[:5])
 del df, confidence
 gc.collect()
 
-categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3","confidence"]
+categorical = ["user_id","region","city","parent_category_name","category_name","user_type","image_top_1","param_1","param_2","param_3","image_confidence"]
 lbl = preprocessing.LabelEncoder()
 for col in categorical:
     df_confidence[col].fillna('missing')
@@ -229,7 +229,7 @@ else:
     lgb_clf = lgb.train(
         lgbm_params,
         lgtrain,
-        num_boost_round=1380,
+        num_boost_round=1500,
         verbose_eval=100
     )
 
